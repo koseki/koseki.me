@@ -1,0 +1,154 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script charset="UTF-8" src="https://maps.googleapis.com/maps/api/js?v=3&libraries=places"></script>
+<!--
+https://developers.google.com/maps/documentation/javascript/examples/places-searchbox
+-->
+<style>
+
+    .controls {
+        margin-top: 10px;
+        border: 1px solid transparent;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        height: 32px;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      #pac-input {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 300px;
+      }
+
+      #pac-input:focus {
+        border-color: #4d90fe;
+      }
+
+      .pac-container {
+        font-family: Roboto;
+      }
+
+      #type-selector {
+        color: #fff;
+        background-color: #4d90fe;
+        padding: 5px 11px 0px 11px;
+      }
+
+      #type-selector label {
+        font-family: Roboto;
+        font-size: 13px;
+        font-weight: 300;
+      }
+      #target {
+        width: 345px;
+      }
+
+
+</style>
+
+</head>
+
+<body>
+lat,lng: <input type="text" name="gmap-latlng" id="gmap-latlng" style="width: 300px" />
+<br>
+<br>
+<input id="pac-input" class="controls" type="text" placeholder="Search">
+
+<div id="gmap" style="width:1000px;height:600px"></div>
+<script type="text/javascript">
+
+// http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+function getParameterByName(name) {
+    var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+$(function() {
+  var q = getParameterByName('q');
+  var pos;
+  var zoom;
+  if (q && q.match(/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/)) {
+    var ll = q.split(/,\s*/, 2);
+    ll[0] = Number(ll[0]);
+    ll[1] = Number(ll[1]);
+    console.log(ll);
+    pos = new google.maps.LatLng(ll[0], ll[1]);
+    zoom = 17;
+    $('#gmap-latlng').val(ll);
+  } else {
+    pos = new google.maps.LatLng(0,0);
+    zoom = 3;
+  }
+
+  var opts = {
+    center: pos,
+    zoom: zoom,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  };
+
+  var gmap = new google.maps.Map(document.getElementById("gmap"), opts);
+
+  var marker = new google.maps.Marker({
+    position: pos,
+    title: "drag and drop",
+    draggable: true
+  });
+  marker.setMap(gmap);
+
+  $('#gmap-latlng').blur(function(e) {
+    var ll = $(this).val();
+    if (!ll.match(/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/)) return;
+    ll = ll.split(/,\s*/, 2);
+    ll[0] = Number(ll[0]);
+    ll[1] = Number(ll[1]);
+    console.log(ll);
+    var pos = new google.maps.LatLng(ll[0],ll[1]);
+    marker.setPosition(pos);
+    gmap.setCenter(pos);
+    gmap.setZoom(17);
+  });
+
+  google.maps.event.addListener(marker, 'dragend', function(ev) {
+    var latlng = ev.latLng.lat() + ',' + ev.latLng.lng();
+    $('#gmap-latlng').val(latlng);
+  });
+
+  // Create the search box and link it to the UI element.
+  var input = document.getElementById('pac-input');
+  var searchBox = new google.maps.places.SearchBox(input);
+  gmap.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+  // Bias the SearchBox results towards current map's viewport.
+  gmap.addListener('bounds_changed', function() {
+    searchBox.setBounds(gmap.getBounds());
+  });
+
+  searchBox.addListener('places_changed', function() {
+    var places = searchBox.getPlaces();
+
+    if (places.length == 0) {
+      return;
+    }
+    var pos = places[0].geometry.location;
+    marker.setPosition(pos);
+    gmap.setCenter(pos);
+    gmap.setZoom(17);
+
+    var latlng = pos.lat() + ',' + pos.lng();
+    jQuery('#gmap-latlng').val(latlng);
+  });
+});
+</script>
+
+</body>
+</html>
+
