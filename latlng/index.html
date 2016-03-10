@@ -118,7 +118,10 @@ $(function() {
   });
 
   google.maps.event.addListener(marker, 'dragend', function(ev) {
-    var latlng = ev.latLng.lat() + ',' + ev.latLng.lng();
+    var lat = ev.latLng.lat().toFixed(6);
+    var lng = ev.latLng.lng().toFixed(6);
+    var latlng = lat + ',' + lng;
+
     $('#gmap-latlng').val(latlng);
   });
 
